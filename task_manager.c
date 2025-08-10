@@ -12,6 +12,8 @@
 
  #include <stdio.h>
  #include <string.h>
+ #include <ctype.h>
+ #include <stdlib.h>
 
  #define TITLE_LENGTH 50
  #define DATE_LENGTH 12
@@ -26,17 +28,57 @@
     int status;
  } Task;
 
+ static void trimmer(char *s){
+    int i = 0;
+    int j = 0;
+    
+    while (isspace(s[i])) i++;
+    
+    while (s[j++] = s[i++]);
+    
+    int length = strlen(s);
+    for (int k = length - 1; k > 0; k--)
+    {
+        if (!isspace(s[k]))
+        {
+            s[k+1] = '\0';
+            break;
+        }
+        
+    }
+    
+ }
+
  char* status_conversion(int status){
     if (status == 0)
     {
         return "Pending";
-    }else{
+    }else
+    {
         return "Completed";
     }
     
  }
 
- char* prioprity_conversion(int prio){
+ int status_conversion_to_int(char *str){
+    return strcmp(str, "Pending") == 0 ? 0 : 1;    
+ }
+
+ int prioprity_conversion_to_int(char *str){
+    if (strcmp(str, "High") == 0)
+    {
+        return 1;
+    }else if (strcmp(str, "Medium") == 0)
+    {
+        return 2;
+    }else
+    {
+        return 3;
+    }
+    
+ }
+
+  char* prioprity_conversion(int prio){
     if (prio == 1)
     {
         return "High";
@@ -159,11 +201,68 @@
     
  }
 
+ void load_tasks_from_file(Task tasks[], int *task_count){
+    FILE *f = fopen("output.txt", "r");
+
+    if (f == NULL)
+    {
+        return;
+    }
+
+    char line[1024];
+
+    while (fgets(line, sizeof(line), f))
+    {
+        line[strcspn(line, "\r\n")] = '\0';
+
+        //Split the line
+
+        char *save = NULL;
+        char *tok = strtok_r(line, "|", &save);
+
+        char fields[5][TITLE_LENGTH] = {{0}};
+        int n = 0;
+
+        while (tok && n < 5)
+        {
+            strncpy(fields[n], tok, TITLE_LENGTH - 1);
+            fields[n][TITLE_LENGTH - 1] = '\0';
+            trimmer(fields[n]);
+            n++;
+            tok = strtok_r(NULL, "|", &save);
+        }
+        if (n != 5)
+        {
+            continue;
+        }
+
+        tasks[*task_count].id = atoi(fields[0]);
+
+        strncpy(tasks[*task_count].title, fields[1], TITLE_LENGTH-1);
+        tasks[*task_count].title[TITLE_LENGTH-1] = '\0';
+
+        tasks[*task_count].priority = prioprity_conversion_to_int(fields[2]);
+
+        strncpy(tasks[*task_count].due_date, fields[3], DATE_LENGTH-1);
+        tasks[*task_count].due_date[DATE_LENGTH-1] = '\0';
+
+        tasks[*task_count].status = status_conversion_to_int(fields[4]);
+
+        (*task_count)++;
+        
+    }
+    fclose(f);
+    
+ }
+
 
  int main(){
-    printf("Welcome to Simple Task Manager!\n");
-    Task tasks[MAX_TASKS];
-    int task_count = 0;
+     printf("Welcome to Simple Task Manager!\n");
+     Task tasks[MAX_TASKS];
+     int task_count = 0; //Follows the size of the tasks array
+
+     load_tasks_from_file(tasks, &task_count);
+     
     while (1)
     {
         printf("===== TASK MANAGER MENU =====\n");
@@ -196,6 +295,7 @@
             save_task_to_file(tasks, &task_count);
             break;
         case 6:
+            save_task_to_file(tasks, &task_count);
             return 0;
             break;
         default:
