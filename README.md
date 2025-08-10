@@ -9,7 +9,7 @@ A simple console-based Task Manager written in C.
 - ☑️ Mark tasks as completed
 - 🗑️ Delete tasks
 - 💾 Save tasks to a file
-- 📂 *(Planned)* Load tasks from a file
+- 📂 Load tasks from a file
 
 ---
 
